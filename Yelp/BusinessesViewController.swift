@@ -8,12 +8,13 @@
 
 import UIKit
 
-class BusinessesViewController: UIViewController, UITableViewDataSource, UITableViewDelegate, FilterViewControllerDelegate {
+class BusinessesViewController: UIViewController, UITableViewDataSource, UITableViewDelegate, FilterViewControllerDelegate, UISearchBarDelegate {
     
     var businesses: [Business]!
     
     @IBOutlet weak var tableView: UITableView!
     
+    var searchBar: UISearchBar!
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -26,34 +27,14 @@ class BusinessesViewController: UIViewController, UITableViewDataSource, UITable
         // Used for estimating scroll bar height
         tableView.estimatedRowHeight = 120
         
-        Business.searchWithTerm(term: "Thai", completion: { (businesses: [Business]?, error: Error?) -> Void in
-            
-            self.businesses = businesses
-            
-            // MDT find a better way to encapsulate line below so it auto runs
-            self.tableView.reloadData()
-            
-            if let businesses = businesses {
-                for business in businesses {
-                    print(business.name!)
-                    print(business.address!)
-                }
-            }
-            
-            }
-        )
+        // Add a search bar
+        searchBar = UISearchBar()
+        // MDT see if I can avoid this and do it programmatically via constraints
+        searchBar.sizeToFit()
+        navigationItem.titleView = searchBar
+        searchBar.delegate = self
         
-        /* Example of Yelp search with more search options specified
-         Business.searchWithTerm("Restaurants", sort: .Distance, categories: ["asianfusion", "burgers"], deals: true) { (businesses: [Business]!, error: NSError!) -> Void in
-         self.businesses = businesses
-         
-         for business in businesses {
-         print(business.name!)
-         print(business.address!)
-         }
-         }
-         */
-        
+        loadSearchResults(withText: "Restaurants")
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -63,7 +44,6 @@ class BusinessesViewController: UIViewController, UITableViewDataSource, UITable
             return 0
         }
     }
-    
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "BusinessCell", for: indexPath) as! BusinessCell
@@ -84,7 +64,6 @@ class BusinessesViewController: UIViewController, UITableViewDataSource, UITable
     }
     
     func filterViewController(filterViewController: FiltersViewController, didUpdateFilters filters: [String : AnyObject]) {
-        
         let categories = filters["categories"] as? [String]
         
         Business.searchWithTerm(term: "Restaurants", sort: nil, categories: categories, deals: nil) {
@@ -92,8 +71,61 @@ class BusinessesViewController: UIViewController, UITableViewDataSource, UITable
             self.businesses = businesses
             self.tableView.reloadData()
         }
-
+        
     }
     
+    // Only search when the search keyboard button was tapped
+    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+        //        let searchText = searchBar.text?.isEmpty ? "Restaurants" : searchBar.text
+        
+        if let searchText = searchBar.text {
+            if !searchText.isEmpty {
+                loadSearchResults(withText: searchText)
+            } else {
+                loadSearchResults(withText: "Restaurants")
+            }
+        }
+    }
+    
+    // Always show the Cancel button in the Search bar
+    func searchBarTextDidBeginEditing(_ searchBar: UISearchBar) {
+        self.searchBar.showsCancelButton = true
+    }
+    
+    // Hide the software keyboard with the Search Cancel button
+    func searchBarCancelButtonClicked(_ searchBar: UISearchBar) {
+        searchBar.showsCancelButton = false
+        searchBar.text = ""
+        searchBar.resignFirstResponder()
+    }
+    
+    func loadSearchResults(withText searchText: String) {
+        Business.searchWithTerm(term: searchText, completion: { (businesses: [Business]?, error: Error?) -> Void in
+            
+            self.businesses = businesses
+            
+            // MDT find a better way to encapsulate line below so it auto runs
+            self.tableView.reloadData()
+            
+            if let businesses = businesses {
+                for business in businesses {
+                    print(business.name!)
+                    print(business.address!)
+                }
+            }
+            
+        })
+        
+        /* Example of Yelp search with more search options specified
+         Business.searchWithTerm("Restaurants", sort: .Distance, categories: ["asianfusion", "burgers"], deals: true) { (businesses: [Business]!, error: NSError!) -> Void in
+         self.businesses = businesses
+         
+         for business in businesses {
+         print(business.name!)
+         print(business.address!)
+         }
+         }
+         */
+    }
     
 }

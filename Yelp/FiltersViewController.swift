@@ -10,7 +10,6 @@ import UIKit
 
 @objc protocol FilterViewControllerDelegate {
     @objc optional func filterViewController(filterViewController: FiltersViewController, didUpdateFilters filters: [String:AnyObject])
-    
 }
 
 class FiltersViewController: UIViewController, UITableViewDataSource, UITableViewDelegate, SwitchCellDelegate {
@@ -76,6 +75,7 @@ class FiltersViewController: UIViewController, UITableViewDataSource, UITableVie
         switchStates[indexPath.row] = value
     }
     
+    // MDT move this to a model Settings object
     func yelpCategories() -> [[String: String]] {
         return [["name" : "Afghan", "code": "afghani"],
                 ["name" : "African", "code": "african"],
