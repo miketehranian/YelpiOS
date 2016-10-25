@@ -89,22 +89,20 @@ class FiltersViewController: UIViewController, UITableViewDelegate {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        // Do any additional setup after loading the view.
-        setupData()
-        setupUI()
+        initializeData()
+        initializeUI()
     }
     
-    func setupUI() {
+    func initializeUI() {
         tableView.delegate = self
         tableView.dataSource = self
         
-        // MDT play with below
         navigationController?.navigationBar.barTintColor = UIColor.red;
         navigationController?.navigationBar.tintColor = UIColor.white;
         navigationController?.navigationBar.isTranslucent = false;
     }
     
-    func setupData() {
+    func initializeData() {
         categories = YelpFilters.yelpCategories()
         distances = YelpFilters.distanceCategories()
         sortBy = YelpFilters.sortByCategories()
@@ -177,14 +175,18 @@ extension FiltersViewController: SwitchCellDelegate {
         case 0:
             hasDealsState = value
         case 1:
-            for i in 0..<distancesSwitchStates.count {
-                distancesSwitchStates[i] = false
+            for (row, isSelected) in distancesSwitchStates {
+                if isSelected {
+                    distancesSwitchStates[row] = false
+                }
             }
             distancesSwitchStates[indexPath.row] = value
             tableView.reloadData()
         case 2:
-            for i in 0..<sortBySwitchStates.count {
-                sortBySwitchStates[i] = false
+            for (row, isSelected) in sortBySwitchStates {
+                if isSelected {
+                    sortBySwitchStates[row] = false
+                }
             }
             sortBySwitchStates[indexPath.row] = value
             tableView.reloadData()

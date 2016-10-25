@@ -7,15 +7,11 @@
 //
 
 import UIKit
+import MBProgressHUD
 
-class BusinessesViewController: UIViewController, UITableViewDelegate {
+class BusinessesViewController: UIViewController {
     
-    // MDT add a didset here to make a call to reloadData()
-    var businesses: [Business]! {
-        didSet {
-            self.tableView.reloadData()
-        }
-    }
+    var businesses: [Business]!
     
     var searchBar: UISearchBar!
     
@@ -25,16 +21,18 @@ class BusinessesViewController: UIViewController, UITableViewDelegate {
     var distancesStates = [Int: Bool]()
     var sortByStates = [Int: Bool]()
     var hasDealState = false
-    var searchTerm = "Restaurants"
+
+    var yelpFilters: YelpFilters?
+    var searchResultsOffset: Int?
     
-    //    var isMoreDataLoading = false
-    //    var loadingMoreView: ActivityView?
+    var isMoreDataLoading = false
+    var loadingMoreView: InfiniteScrollActivityView?
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
         initializeUI()
-        loadSearchResults(withText: searchTerm)
+        loadSearchResults(withText: searchBar.text, appendResults: false)
     }
     
     func initializeUI() {
@@ -47,10 +45,9 @@ class BusinessesViewController: UIViewController, UITableViewDelegate {
         searchBar = UISearchBar()
         searchBar.sizeToFit()
         searchBar.delegate = self
-        searchBar.text = searchTerm
+        searchBar.text = "Restaurants"
         
         searchBar = UISearchBar()
-        // MDT see if I can avoid this and do it programmatically via constraints
         searchBar.sizeToFit()
         navigationItem.titleView = searchBar
         searchBar.delegate = self
@@ -60,19 +57,18 @@ class BusinessesViewController: UIViewController, UITableViewDelegate {
         navigationController?.navigationBar.isTranslucent = false;
         
         // Set up Infinite Scroll loading indicator
-        //        let frame = CGRect(x: 0, y: tableView.contentSize.height, width: tableView.bounds.size.width, height: ActivityView.defaultHeight)
-        //        loadingMoreView = ActivityView(frame: frame)
-        //        loadingMoreView!.isHidden = true
-        //        tableView.addSubview(loadingMoreView!)
-        //
-        //        var insets = tableView.contentInset;
-        //        insets.bottom += ActivityView.defaultHeight;
-        //        tableView.contentInset = insets
+        let frame = CGRect(x: 0, y: tableView.contentSize.height, width: tableView.bounds.size.width, height: InfiniteScrollActivityView.defaultHeight)
+        loadingMoreView = InfiniteScrollActivityView(frame: frame)
+        loadingMoreView!.isHidden = true
+        tableView.addSubview(loadingMoreView!)
+        
+        var insets = tableView.contentInset;
+        insets.bottom += InfiniteScrollActivityView.defaultHeight;
+        tableView.contentInset = insets
         
         businesses = [Business]()
     }
     
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         let navigationController = segue.destination as! UINavigationController
         let filtersViewController = navigationController.topViewController as! FiltersViewController
@@ -98,69 +94,49 @@ class BusinessesViewController: UIViewController, UITableViewDelegate {
         }
     }
     
-    func loadSearchResults(withText searchText: String) {
-        //        if self.isMoreDataLoading == false {
+    func loadSearchResults(withText searchText: String?, appendResults: Bool) {
+        // MDT Not sure what the below is doing?
+        //        if !isMoreDataLoading {
         //            MBProgressHUD.showAdded(to: self.view, animated: true)
         //            businesses.removeAll()
         //            tableView.reloadData()
         //        }
         
-        Business.searchWithTerm(term: searchText, completion: { (businesses: [Business]?, error: Error?) -> Void in
-            self.businesses = businesses
-            
-            if let businesses = businesses {
-                for business in businesses {
-                    print(business.name!)
-                    print(business.address!)
-                }
+        var localSearchText: String
+        
+        if searchText == nil || searchText!.isEmpty {
+            localSearchText = "Restaurants"
+        } else {
+            localSearchText = searchText!
+        }
+        
+        if let existingYelpFilters = yelpFilters {
+            Business.searchWithTerm(term: localSearchText, sort: existingYelpFilters.sort, categories: existingYelpFilters.categories, deals: existingYelpFilters.hasDeal, radiusMeters: existingYelpFilters.distance, offset: searchResultsOffset) {
+                (businesses: [Business]?, error: Error?) in
+                self.searchResultsCompletionHandler(businesses: businesses, error: error, appendResults: appendResults)
             }
-            
-        })
-        
-        
-        //        if self.isMoreDataLoading == false {
-        //            MBProgressHUD.showAdded(to: self.view, animated: true)
-        //            businesses.removeAll()
-        //            tableView.reloadData()
-        //        }
-        //
-        //
-        //        Business.searchWithTerm(term: term, offset:businesses.count, completion: { (businesses: [Business]?, error: Error?) -> Void in
-        //            if self.isMoreDataLoading == false {
-        //                MBProgressHUD.hide(for: self.view, animated: true)
-        //            }
-        //            self.isMoreDataLoading = false
-        //            self.loadingMoreView!.stopAnimating()
-        //            if let businesses = businesses {
-        //                for business in businesses {
-        //                    self.businesses.append(business)
-        //                }
-        //            }
-        //            self.tableView.reloadData()
-        //            if let businesses = businesses {
-        //                for business in businesses {
-        //                    print(business.name!)
-        //                    print(business.address!)
-        //                }
-        //            }
-        //
-        //            }
-        //        )
-        //    }
-        
-        
-        /* Example of Yelp search with more search options specified
-         Business.searchWithTerm("Restaurants", sort: .Distance, categories: ["asianfusion", "burgers"], deals: true) { (businesses: [Business]!, error: NSError!) -> Void in
-         self.businesses = businesses
-         
-         for business in businesses {
-         print(business.name!)
-         print(business.address!)
-         }
-         }
-         */
+        } else {
+            Business.searchWithTerm(term: localSearchText, offset: searchResultsOffset) {
+                (businesses: [Business]?, error: Error?) in
+                self.searchResultsCompletionHandler(businesses: businesses, error: error, appendResults: appendResults)
+            }
+        }
     }
     
+    func searchResultsCompletionHandler(businesses: [Business]?, error: Error?, appendResults: Bool) {
+        if !isMoreDataLoading {
+            MBProgressHUD.hide(for: self.view, animated: true)
+        }
+        self.isMoreDataLoading = false
+        self.loadingMoreView!.stopAnimating()
+        
+        if appendResults {
+            self.businesses.append(contentsOf: businesses!)
+        } else {
+            self.businesses = businesses
+        }
+        self.tableView.reloadData()
+    }
 }
 
 extension BusinessesViewController: UITableViewDataSource {
@@ -175,12 +151,11 @@ extension BusinessesViewController: UITableViewDataSource {
     }
 }
 
-// MDT not sure if I need this
-//extension BusinessesViewController: UITableViewDelegate {
-//    func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
-//        searchBar.resignFirstResponder()
-//    }
-//}
+extension BusinessesViewController: UITableViewDelegate {
+    func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
+        searchBar.resignFirstResponder()
+    }
+}
 
 extension BusinessesViewController: FilterViewControllerDelegate {
     func filterViewController(_ filtersViewController: FiltersViewController, withFilters filters: YelpFilters, withFilterTableStates filterTableStates: YelpFilterTableStates) {
@@ -189,50 +164,56 @@ extension BusinessesViewController: FilterViewControllerDelegate {
         self.sortByStates = filterTableStates.sortByStates
         self.hasDealState = filterTableStates.hasDealState
         
+        self.yelpFilters = filters
+        self.searchResultsOffset = 0
+        
         var searchTerm: String
         if searchBar.text == nil || searchBar.text!.isEmpty {
-            searchTerm = "restaurants'"
+            searchTerm = "Restaurants"
         } else {
             searchTerm = searchBar.text!
         }
         
-//        print("MDT: SEARCH ARGS: SORT:\(filters.sort) CATS:\(filters.categories) DEALS:\(filters.hasDeal) RADIUSMETERS:\(filters.distance)")
-        
-        Business.searchWithTerm(term: searchTerm, sort: filters.sort, categories: filters.categories, deals: filters.hasDeal, radiusMeters: filters.distance) {
-            (businesses:[Business]?, error:Error?) in
-            self.businesses = businesses
-        }
+        loadSearchResults(withText: searchTerm, appendResults: false)
     }
 }
 
 extension BusinessesViewController: UISearchBarDelegate {
     // Only search when the search keyboard button was tapped
     func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
-        //        let searchText = searchBar.text?.isEmpty ? "Restaurants" : searchBar.text
+        searchResultsOffset = 0
         
         if let searchText = searchBar.text {
             if !searchText.isEmpty {
-                loadSearchResults(withText: searchText)
+                loadSearchResults(withText: searchText, appendResults: false)
             } else {
-                loadSearchResults(withText: "Restaurants")
+                loadSearchResults(withText: "Restaurants", appendResults: false)
             }
         }
-        
-        // MDT maybe use below instead?
-        //        searchTerm = searchBar.text!
-        //        loadSearchResults(withText: searchTerm)
-        //        searchBar.resignFirstResponder()
     }
+}
+
+extension BusinessesViewController: UIScrollViewDelegate {
     
-    // Always show the Cancel button in the Search bar
-    func searchBarTextDidBeginEditing(_ searchBar: UISearchBar) {
-        self.searchBar.showsCancelButton = true
-    }
-    
-    // Hide the software keyboard with the Search Cancel button
-    func searchBarCancelButtonClicked(_ searchBar: UISearchBar) {
-        searchBar.showsCancelButton = false
-        searchBar.text = ""
-        searchBar.resignFirstResponder()
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        if (!isMoreDataLoading) {
+            // Calculate the position of one screen length before the bottom of the results
+            let scrollViewContentHeight = tableView.contentSize.height
+            let scrollOffsetThreshold = scrollViewContentHeight - tableView.bounds.size.height
+            
+            // When the user has scrolled past the threshold, start requesting
+            if(scrollView.contentOffset.y > scrollOffsetThreshold && tableView.isDragging) {
+                isMoreDataLoading = true
+                
+                searchResultsOffset = businesses.count
+                
+                // Update position of loadingMoreView, and start loading indicator
+                let frame = CGRect(x: 0, y:tableView.contentSize.height, width: tableView.bounds.size.width, height: InfiniteScrollActivityView.defaultHeight)
+                loadingMoreView?.frame = frame
+                loadingMoreView!.startAnimating()
+
+                loadSearchResults(withText: searchBar.text, appendResults: true)
+            }
+        }
     }
 }
