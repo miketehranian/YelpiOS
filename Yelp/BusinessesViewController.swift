@@ -56,6 +56,9 @@ class BusinessesViewController: UIViewController {
         navigationController?.navigationBar.tintColor = UIColor.white;
         navigationController?.navigationBar.isTranslucent = false;
         
+        let titleDict: NSDictionary = [NSForegroundColorAttributeName: UIColor.white]
+        navigationController?.navigationBar.titleTextAttributes = titleDict as? [String : Any]
+        
         // Set up Infinite Scroll loading indicator
         let frame = CGRect(x: 0, y: tableView.contentSize.height, width: tableView.bounds.size.width, height: InfiniteScrollActivityView.defaultHeight)
         loadingMoreView = InfiniteScrollActivityView(frame: frame)

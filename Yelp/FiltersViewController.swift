@@ -100,6 +100,9 @@ class FiltersViewController: UIViewController, UITableViewDelegate {
         navigationController?.navigationBar.barTintColor = UIColor.red;
         navigationController?.navigationBar.tintColor = UIColor.white;
         navigationController?.navigationBar.isTranslucent = false;
+        
+        let titleDict: NSDictionary = [NSForegroundColorAttributeName: UIColor.white]
+        navigationController?.navigationBar.titleTextAttributes = titleDict as? [String : Any]
     }
     
     func initializeData() {

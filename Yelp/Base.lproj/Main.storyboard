@@ -227,7 +227,7 @@
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                     </view>
-                    <navigationItem key="navigationItem" title="Map" id="ugR-Eu-xaK">
+                    <navigationItem key="navigationItem" title="Map" id="ugR-Eu-xaK" colorLabel="IBBuiltInLabel-Orange">
                         <barButtonItem key="leftBarButtonItem" title="Done" id="SNr-SG-jes">
                             <connections>
                                 <action selector="onDoneTap:" destination="cDI-yo-mEz" id="D7u-vD-Gkq"/>

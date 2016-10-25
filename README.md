@@ -39,13 +39,18 @@ Please list two areas of the assignment you'd like to **discuss further with you
 
 Here's a walkthrough of implemented user stories:
 
-<img src='http://i.imgur.com/link/to/your/gif/file.gif' title='Video Walkthrough' width='' alt='Video Walkthrough' />
+<img src='http://i.imgur.com/NNTEtHS.gif' title='Video Walkthrough 1' width='' alt='Video Walkthrough 1' />
+<img src='http://i.imgur.com/SZnsu3M.gif' title='Video Walkthrough 2' width='' alt='Video Walkthrough 2' />
+<img src='http://i.imgur.com/EZRXGST.gif' title='Video Walkthrough 3' width='' alt='Video Walkthrough 3' />
+<img src='http://i.imgur.com/uCTmtKX.gif' title='Video Walkthrough 4' width='' alt='Video Walkthrough 4' />
+<img src='http://i.imgur.com/L2ltySQ.gif' title='Video Walkthrough 5' width='' alt='Video Walkthrough 5' />
 
 GIF created with [LiceCap](http://www.cockos.com/licecap/).
 
 ## Notes
 
-I spent almost three hours on getting inifite scrolling working because it required learning more about the Yelp API and also having the behavior work under all use cases. Specifically making the behavior work when navigating to the Filters and Maps View and back. I tried to make my logic for this as clean as possible, but I hope I can get some insight from others to see if there was a clean way of doing this.
+I spent almost three hours on getting infinite scrolling working because it required learning more about the Yelp API and also testing the behavior under all use cases and fixing a few bugs. The use cases I tested heavily were navigating to the Filters and Maps View and back and making sure all of the filters were in place and infinite scrolling still worked. I tried to make my logic for this as clean as possible, but I hope I can get some insight from others to see if there was a clean way of doing this.
+Also, I learned to try to avoid property observers on collections like arrays and dictionaries. Some operations which are mutating will call the property observer and others will not. I read in a blog post how this behavior was changed with the recent release of Swift. So I recommend avoiding property observers on collections because they can be nebulous as to when they actually run beyond the obvious use case of assignment.
 
 ## License
 

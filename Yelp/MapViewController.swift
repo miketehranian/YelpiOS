@@ -36,6 +36,9 @@ class MapViewController: UIViewController {
         navigationController?.navigationBar.tintColor = UIColor.white;
         navigationController?.navigationBar.isTranslucent = false;
         
+        let titleDict: NSDictionary = [NSForegroundColorAttributeName: UIColor.white]
+        navigationController?.navigationBar.titleTextAttributes = titleDict as? [String : Any]
+        
         for business in businesses {
             let location2D = CLLocationCoordinate2D(latitude: business.latitiude!, longitude: business.longitude!)
             addAnnotationAtCoordinate(coordinate: location2D, withTitle: business.name)
