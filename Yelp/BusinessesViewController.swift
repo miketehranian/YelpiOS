@@ -71,37 +71,24 @@ class BusinessesViewController: UIViewController {
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         let navigationController = segue.destination as! UINavigationController
-        let filtersViewController = navigationController.topViewController as! FiltersViewController
         
-        filtersViewController.delegate = self
-        
-        let navigationViewController = segue.destination as! UINavigationController
-        switch navigationViewController.topViewController {
+        switch navigationController.topViewController {
         case is FiltersViewController:
-            let filtersViewController = navigationViewController.topViewController as! FiltersViewController
+            let filtersViewController = navigationController.topViewController as! FiltersViewController
             filtersViewController.delegate = self
             filtersViewController.categoriesSwitchStates = categoryStates
             filtersViewController.distancesSwitchStates = distancesStates
             filtersViewController.sortBySwitchStates = sortByStates
             filtersViewController.hasDealsState = hasDealState
-            //        case is MapViewController:
-            //            let mapViewController = navigationViewController.topViewController as! MapViewController
-            //            mapViewController.businesses = businesses
-            //            mapViewController.delegate = self
-        //            break
+        case is MapViewController:
+            let mapViewController = navigationController.topViewController as! MapViewController
+            mapViewController.businesses = businesses
         default:
             break
         }
     }
     
     func loadSearchResults(withText searchText: String?, appendResults: Bool) {
-        // MDT Not sure what the below is doing?
-        //        if !isMoreDataLoading {
-        //            MBProgressHUD.showAdded(to: self.view, animated: true)
-        //            businesses.removeAll()
-        //            tableView.reloadData()
-        //        }
-        
         var localSearchText: String
         
         if searchText == nil || searchText!.isEmpty {
@@ -217,3 +204,4 @@ extension BusinessesViewController: UIScrollViewDelegate {
         }
     }
 }
+
